@@ -6,7 +6,8 @@ from app.handler_logic.presenters import (
     CancellationPresenter,
     GetRateListPresenter,
     ExchangeMoneyPresenter,
-    HistoryRatePresenter
+    HistoryRatePresenter,
+    HelpPresenter
 )
 
 
@@ -36,5 +37,11 @@ def exchange_money(update: Update, context: CallbackContext) -> int:
 
 def history_rate(update: Update, context: CallbackContext) -> int:
     cancellation_presenter = HistoryRatePresenter(update, context)
+    cancellation_presenter.present_response()
+    return cancellation_presenter.next_state
+
+
+def get_help(update: Update, context: CallbackContext) -> int:
+    cancellation_presenter = HelpPresenter(update)
     cancellation_presenter.present_response()
     return cancellation_presenter.next_state

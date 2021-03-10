@@ -129,7 +129,6 @@ class HistoryRatePresenter(TelegramPresenter):
         else:
             return False
 
-
     def get_history_rate_data(self):
         base,  symbols = self._context.args[0].split('/')
         start_at = datetime.now() - timedelta(days=int(self._context.args[2]))
@@ -158,7 +157,7 @@ class HistoryRatePresenter(TelegramPresenter):
         self.generate_chart()
         photo = [InputMediaPhoto(media=open('chart.png', 'rb'))]
         self._update.effective_user.bot.send_media_group(self._update.effective_user.id, media=photo)
-        return ''
+        return self._context.args[0] + ' graph'
 
 
     @property
@@ -214,6 +213,23 @@ class GetRateListPresenter(TelegramPresenter):
         for val in rate_data:
             output += f"{val}: {rate_data[val]}\n"
         return output
+
+    @property
+    def reply_keyboard(self) -> Union[ReplyKeyboardRemove, ReplyKeyboardMarkup]:
+        return ReplyKeyboardRemove()
+
+    @property
+    def next_state(self) -> int:
+        return constants.RATE
+
+
+class HelpPresenter(TelegramPresenter):
+    def __init__(self, update: Update):
+        super().__init__(update)
+
+    @property
+    def text(self) -> str:
+        return constants.HELP
 
     @property
     def reply_keyboard(self) -> Union[ReplyKeyboardRemove, ReplyKeyboardMarkup]:
