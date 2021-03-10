@@ -1,0 +1,4 @@
+# Plase rename this file to .env and enter bot_token
+BOT_TOKEN =
+RATE_API_LINK = https://api.exchangeratesapi.io/latest?base=
+RATE_HISTORY_API_LINK =  https://api.exchangeratesapi.io/history?base=
