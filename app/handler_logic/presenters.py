@@ -7,7 +7,6 @@ from app.config import constants
 from app.config.config import AppConfig
 from app.database.database import DataBase
 from datetime import datetime, timedelta
-import os
 import matplotlib.pyplot as plt
 
 
@@ -116,7 +115,6 @@ class ExchangeMoneyPresenter(TelegramPresenter):
 class HistoryRatePresenter(TelegramPresenter):
     def __init__(self, update: Update, context: CallbackContext):
         super().__init__(update, context)
-        print(self._context.args)
         self.history_rate = self.get_history_rate_data()
 
     def validate(self):
@@ -130,34 +128,43 @@ class HistoryRatePresenter(TelegramPresenter):
             return False
 
     def get_history_rate_data(self):
-        base,  symbols = self._context.args[0].split('/')
-        start_at = datetime.now() - timedelta(days=int(self._context.args[2]))
-        end_at = str(datetime.now().date())
-        current_dict = get(AppConfig.RATE_HISTORY_API_LINK+base+'&start_at='+str(start_at.date())+'&end_at='+end_at+'&symbols='+symbols).json()['rates']
-        keylist = list(current_dict.keys())
-        keylist.sort()
-        new_dict = {}
-        for key in keylist:
-            new_dict.update({key: current_dict[key]})
-        return new_dict
+        if self.validate():
+            base,  symbols = self._context.args[0].split('/')
+            start_at = datetime.now() - timedelta(days=int(self._context.args[2]))
+            end_at = str(datetime.now().date())
+            try:
+                current_dict = get(AppConfig.RATE_HISTORY_API_LINK+base+'&start_at='+str(start_at.date())+'&end_at='+end_at+'&symbols='+symbols).json()['rates']
+                keylist = list(current_dict.keys())
+                keylist.sort()
+                new_dict = {}
+                for key in keylist:
+                    new_dict.update({key: current_dict[key]})
+            except KeyError:
+                return None
+            return new_dict
+        return None
 
     def generate_chart(self):
-        x = []
-        y = []
-        for value in self.history_rate:
-            x.append(value)
-            y.append(self.history_rate[value][self._context.args[0].split('/')[1]])
-        fig, ax = plt.subplots()
-        ax.plot(x, y, color="g")
-        plt.grid()
-        plt.savefig('chart.png')
+        if self.history_rate:
+            x = []
+            y = []
+            for value in self.history_rate:
+                x.append(value)
+                y.append(self.history_rate[value][self._context.args[0].split('/')[1]])
+            fig, ax = plt.subplots()
+            ax.plot(x, y, color="g")
+            plt.grid()
+            plt.savefig('chart.png')
+            return True
+        return False
 
     @property
     def text(self) -> str:
-        self.generate_chart()
-        photo = [InputMediaPhoto(media=open('chart.png', 'rb'))]
-        self._update.effective_user.bot.send_media_group(self._update.effective_user.id, media=photo)
-        return self._context.args[0] + ' graph'
+        if self.generate_chart():
+            photo = [InputMediaPhoto(media=open('chart.png', 'rb'))]
+            self._update.effective_user.bot.send_media_group(self._update.effective_user.id, media=photo)
+            return self._context.args[0] + ' graph'
+        return 'No exchange rate data is available for the selected currency'
 
 
     @property
