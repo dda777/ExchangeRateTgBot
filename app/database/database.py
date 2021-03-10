@@ -12,3 +12,7 @@ class DataBase:
     def load_data(self):
         with open(self.file_name) as file:
             return safe_load(file)
+
+    def update_data(self, dict_to_add):
+        with open(self.file_name, 'a') as file:
+            safe_dump(dict_to_add, file, default_flow_style=False)

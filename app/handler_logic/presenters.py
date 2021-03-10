@@ -188,7 +188,7 @@ class GetRateListPresenter(TelegramPresenter):
 
     def save_rate_data(self, data):
         current_date = {'date': datetime.now()}
-        self.data_base.dump_data({self._user_id: [data, current_date]})
+        self.data_base.update_data({self._user_id: [data, current_date]})
 
     def load_rate_data(self):
         data = self.data_base.load_data()
@@ -200,13 +200,17 @@ class GetRateListPresenter(TelegramPresenter):
             self.data_base.dump_data(data)
             return data[self._user_id][0]
 
-
     @staticmethod
     def check_elapsed_time(time):
         return True if time + timedelta(minutes=10) > datetime.now() else False
 
     def data_exist(self):
-        return True if self.data_base.load_data() else False
+        data = self.data_base.load_data()
+        try:
+            if data[self._user_id]:
+                return True
+        except Exception:
+            return False
 
     @property
     def text(self) -> str:
